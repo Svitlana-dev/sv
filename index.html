@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14130F">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Тренування">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<title>Мої тренування</title>
+<style>
+  :root{
+    --bg:#14130F; --surface:#1C1A14; --surface2:#24221A; --line:#332F24;
+    --text:#ECE7DA; --muted:#9A9586; --faint:#6A665A;
+    --amber:#F0A92B; --amber-dim:#4a3914; --leaf:#86A66B; --leaf-dim:#26321d; --red:#D0705F;
+    --mono:ui-monospace,"SF Mono","Roboto Mono",Menlo,Consolas,monospace;
+    --body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --nav:62px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--body);line-height:1.4;
+    -webkit-font-smoothing:antialiased;padding-top:env(safe-area-inset-top);
+    padding-bottom:calc(var(--nav) + env(safe-area-inset-bottom))}
+  input,button,textarea{font:inherit;color:inherit}
+  button{cursor:pointer;touch-action:manipulation}
+  button[disabled]{opacity:.35;cursor:default}
+  .wrap{max-width:560px;margin:0 auto;padding:14px 16px 28px}
+  h1{font-size:24px;font-weight:800;margin:6px 2px 12px;letter-spacing:-.01em;display:flex;align-items:baseline;gap:8px}
+  h1 .cnt{font-family:var(--mono);font-size:14px;color:var(--faint);font-weight:600}
+  h2{font-size:15px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:26px 2px 10px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+  .muted{color:var(--muted)} .small{font-size:12.5px}
+  .empty{color:var(--faint);font-size:14px;padding:18px 4px;text-align:center}
+
+  /* Відпочинок */
+  .rest-msg{font-size:14.5px;margin-bottom:12px}
+  .rest-msg b{color:var(--amber)}
+  .strip{display:grid;grid-template-columns:repeat(14,1fr);gap:3px}
+  .strip .d{text-align:center;font-size:9px;color:var(--faint);text-transform:uppercase}
+  .strip .c{height:26px;margin-top:2px;border-radius:6px;background:var(--surface2);color:var(--faint);
+    display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;font-family:var(--mono)}
+  .strip .c.on{background:var(--amber);color:#1a1505}
+  .strip .today .c{box-shadow:0 0 0 1.5px var(--muted)}
+  .rest-foot{margin-top:9px;font-size:12px;color:var(--muted)}
+
+  /* Вибір дня */
+  .chips{display:flex;gap:8px;overflow-x:auto;margin:0 0 12px;padding:2px 0}
+  .chip{flex:1 0 auto;min-width:86px;padding:10px 10px 8px;border-radius:12px;border:1px solid var(--line);
+    background:var(--surface);text-align:center}
+  .chip .t{font-weight:700;font-size:15px;white-space:nowrap}
+  .chip .s{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;min-height:14px}
+  .chip .s.nx{color:var(--amber)}
+  .chip.sel{background:var(--amber);border-color:var(--amber);color:#1a1505}
+  .chip.sel .s{color:#1a1505;opacity:.75}
+
+  .wo-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 10px}
+  .datel{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px}
+  .datel input{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:6px 8px;font-size:15px;color-scheme:dark}
+  .badge{font-size:11px;padding:3px 9px;border-radius:20px;background:var(--amber-dim);color:var(--amber);font-weight:600}
+
+  /* Вправа */
+  .ex{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 12px 10px;margin-bottom:10px}
+  .ex-head{display:flex;align-items:center;gap:8px}
+  .ex-name{flex:1;min-width:0;background:transparent;border:none;border-bottom:1px dashed transparent;
+    font-size:16.5px;font-weight:700;padding:2px 0;resize:none;overflow:hidden;line-height:1.3;display:block}
+  .ex-name:focus{outline:none;border-bottom-color:var(--faint)}
+  .tgt{flex-shrink:0;font-family:var(--mono);font-size:11.5px;color:var(--muted);background:var(--surface2);
+    padding:3px 7px;border-radius:6px;white-space:nowrap}
+  .info{font-size:12px;color:var(--muted);margin-top:5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .info .tgt{color:var(--text)}
+  .daynote{font-size:13px;color:var(--muted);background:var(--surface);border:1px dashed var(--line);border-radius:10px;padding:9px 12px;margin:0 0 12px}
+  .pd-note{width:100%;background:var(--surface2);border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:15px;margin:-2px 0 6px;color:var(--muted)}
+  .pex-info{width:100%;margin-top:6px;font-size:14px!important;color:var(--muted)}
+  .prev{font-size:12px;color:var(--amber);margin:4px 0 8px}
+  .prev.none{color:var(--faint)}
+  .sets{display:flex;flex-direction:column;gap:6px}
+  .sh,.set{display:grid;grid-template-columns:22px minmax(0,1fr) 74px 62px 44px;gap:6px;align-items:center}
+  .sh{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em}
+  .sh span:nth-child(n+3){text-align:center}
+  .set .n{font-family:var(--mono);font-size:13px;color:var(--faint);text-align:center}
+  .set .pv{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--amber);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .set .pv.no{color:var(--faint);font-weight:500}
+  .set.up .pv::after{content:" ▲";color:var(--leaf);font-size:10px}
+  .set input{width:100%;background:var(--surface2);border:1px solid var(--line);border-radius:9px;
+    padding:9px 4px;font-family:var(--mono);font-size:16px;font-weight:700;text-align:center}
+  .set input::placeholder{color:var(--faint);font-weight:500}
+  .set input:focus{outline:none;border-color:var(--amber);background:#2a2719}
+  .set .ok{height:40px;border-radius:9px;border:1px solid var(--line);background:var(--surface2);color:var(--faint);font-size:17px;font-weight:700}
+  .set.done .ok{background:var(--leaf);border-color:var(--leaf);color:#16200d}
+  .set.done input{border-color:var(--leaf-dim);background:#1f2619}
+  .ex-foot{display:flex;gap:8px;margin-top:9px}
+  .ex-foot button{flex:1;background:none;border:1px dashed var(--line);border-radius:9px;padding:8px;color:var(--muted);font-size:13px}
+
+  .addex{width:100%;background:none;border:1px dashed var(--line);border-radius:12px;padding:12px;color:var(--muted);font-size:14px;margin-bottom:10px}
+  .note{width:100%;min-height:58px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:15px;resize:vertical}
+  .note:focus{outline:none;border-color:var(--faint)}
+  .cta{position:sticky;bottom:calc(var(--nav) + env(safe-area-inset-bottom) + 10px);margin-top:14px;z-index:5}
+  .finish{width:100%;border:none;border-radius:14px;padding:16px;background:var(--amber);color:#1a1505;
+    font-size:17px;font-weight:800;box-shadow:0 10px 28px -12px var(--amber)}
+  .finish:active{transform:translateY(1px)}
+  .ghost{width:100%;margin-top:10px;background:none;border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--muted);font-size:14px}
+  .danger{color:var(--red)!important}
+
+  /* Історія */
+  .log-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px}
+  .tag{font-weight:800;font-size:15px}
+  .ld{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap}
+  .lr{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-top:1px solid var(--line);font-size:13.5px}
+  .lr .ln{color:var(--text)}
+  .lr .lv{font-family:var(--mono);font-size:12.5px;color:var(--amber);text-align:right}
+  .lnote{font-size:13px;color:var(--muted);margin-top:6px;font-style:italic}
+  .log-f{display:flex;justify-content:flex-end;margin-top:8px}
+  .link{background:none;border:none;padding:4px 2px;font-size:13px;color:var(--muted)}
+
+  /* Програма */
+  .pd-head{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+  .pd-name{flex:1;min-width:0;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-size:17px;font-weight:800}
+  .ib{display:flex;gap:5px}
+  .ib button{width:36px;height:36px;border-radius:9px;border:1px solid var(--line);background:var(--surface2);color:var(--muted);font-size:15px;padding:0}
+  .pex{border-top:1px solid var(--line);padding:9px 0}
+  .pex input{background:var(--surface2);border:1px solid var(--line);border-radius:9px;padding:8px 9px;font-size:16px;min-width:0}
+  .pex input:focus,.pd-name:focus{outline:none;border-color:var(--amber)}
+  .pex-name{width:100%;font-weight:600}
+  .pex-sub{display:flex;gap:6px;margin-top:6px;align-items:center}
+  .pex-tgt{flex:1;font-family:var(--mono);font-size:14px!important}
+  .pex-sets{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--faint)}
+  .pex-sets input{width:44px;text-align:center;font-family:var(--mono);font-weight:700;padding:8px 2px}
+  .btnrow{display:flex;gap:8px;margin:10px 0 8px}
+  .btn{flex:1;background:var(--surface2);border:1px solid var(--line);border-radius:11px;padding:12px;font-size:14px;font-weight:600}
+  .btn.full{width:100%}
+  .hint{font-size:12px;color:var(--faint);margin:2px 2px 12px}
+
+  /* Навігація */
+  .tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;background:rgba(20,19,15,.96);
+    border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);backdrop-filter:blur(8px)}
+  .tabs button{flex:1;height:var(--nav);background:none;border:none;color:var(--faint);font-size:11px;font-weight:600;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+  .tabs button .ic{font-size:20px;line-height:1}
+  .tabs button.on{color:var(--amber)}
+
+  .toast{position:fixed;left:50%;bottom:calc(var(--nav) + env(safe-area-inset-bottom) + 84px);transform:translateX(-50%) translateY(12px);
+    background:var(--text);color:var(--bg);font-weight:700;padding:11px 18px;border-radius:12px;font-size:14px;
+    opacity:0;pointer-events:none;transition:.22s;z-index:50;max-width:calc(100% - 32px);text-align:center}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main class="wrap" id="view"></main>
+<nav class="tabs" id="tabs">
+  <button data-tab="workout"><span class="ic">🏋️</span>Тренування</button>
+  <button data-tab="history"><span class="ic">📅</span>Історія</button>
+  <button data-tab="program"><span class="ic">✏️</span>Програма</button>
+</nav>
+<input type="file" id="file" accept="application/json,.json" hidden>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ================= Утиліти ================= */
+const KEY = 'gymdiary-druzhyna:v1';   // окреме сховище, щоб не змішувалось з чоловіковим щоденником
+const view = document.getElementById('view');
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm = s => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+const pad = n => String(n).padStart(2, '0');
+const isoDate = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const today = () => isoDate(new Date());
+const parseISO = s => { const [y,m,d] = String(s).split('-').map(Number); return new Date(y, m-1, d); };
+const daysBetween = (a, b) => Math.round((parseISO(b) - parseISO(a)) / 86400000);
+const WD = ['нд','пн','вт','ср','чт','пт','сб'];
+const fmtDate = s => { const d = parseISO(s); return `${WD[d.getDay()]} ${pad(d.getDate())}.${pad(d.getMonth()+1)}`; };
+function plural(n, one, few, many){
+  const a = Math.abs(n) % 10, b = Math.abs(n) % 100;
+  if (a === 1 && b !== 11) return one;
+  if (a >= 2 && a <= 4 && (b < 12 || b > 14)) return few;
+  return many;
+}
+const ago = n => n <= 0 ? 'сьогодні' : n === 1 ? 'вчора' : `${n} ${plural(n,'день','дні','днів')} тому`;
+const num = v => { const s = String(v ?? '').trim().replace(',', '.'); if (s === '') return ''; const n = parseFloat(s); return isFinite(n) ? n : ''; };
+const showKg = v => (v === '' || v == null) ? '' : String(v).replace('.', ',');
+const filled = s => String(s.kg ?? '').trim() !== '' || String(s.reps ?? '').trim() !== '';
+function fmtSet(s){
+  const kg = showKg(s.kg), r = (s.reps === '' || s.reps == null) ? '' : String(s.reps);
+  if (kg && r) return `${kg}×${r}`;
+  if (kg) return `${kg} кг`;
+  if (r) return `${r} повт`;
+  return '—';
+}
+function shortName(name){
+  const s = String(name).replace(/^день\s*/i, '').trim() || String(name);
+  return s.slice(0, 2).toUpperCase();
+}
+
+/* ================= Дані ================= */
+const mk = (name, target, sets, info = '') => ({ id: uid(), name, target, sets, info });
+function defaultProgram(){
+  return { days: [
+    { id: uid(), name: 'День А', note: 'Сідниці', exercises: [
+      mk('Ягодичний міст у тренажері', '4 × 8–12', 4, 'RIR 1–2 · відпочинок 2.5 хв'),
+      mk('Жим ногами', '3 × 10–12', 3, 'Стопи високо й широко, акцент на сідниці · RIR 1–2 · відпочинок 2.5 хв'),
+      mk('Тяга верхнього блока широким хватом', '4 × 8–12', 4, 'RIR 1–2 · відпочинок 2 хв'),
+      mk('Жим гантелей лежачи', '3 × 8–12', 3, 'RIR 1–2 · відпочинок 2 хв'),
+      mk('Згинання ніг лежачи', '3 × 10–12', 3, 'RIR 1 · відпочинок 1.5 хв'),
+      mk('Скручування на блоці (прес)', '3 × 12–15', 3, 'RIR 1–2 · відпочинок 1.5 хв'),
+    ]},
+    { id: uid(), name: 'День Б', note: 'Спина та плечі', exercises: [
+      mk('Тяга з упором грудьми (Т-гриф/Хаммер)', '4 × 8–12', 4, 'RIR 1–2 · відпочинок 2 хв'),
+      mk('Жим на плечі в тренажері', '3 × 8–12', 3, 'RIR 1–2 · відпочинок 2 хв'),
+      mk('Махи в сторони (блок/тренажер)', '3 × 12–15', 3, 'RIR 1 · відпочинок 1.5 хв'),
+      mk('Гак-присід у тренажері', '3 × 10–12', 3, 'RIR 1–2 · відпочинок 2.5 хв'),
+      mk('Відведення ніг у тренажері (абдукція)', '3 × 12–15', 3, 'RIR 1 · відпочинок 1.5 хв'),
+      mk('Розгинання рук на трицепс (блок)', '3 × 10–12', 3, 'RIR 1 · відпочинок 1.5 хв'),
+      mk('Гіперекстензія', '3 × 12–15', 3, 'Спина трохи округлена, акцент на сідниці · RIR 2 · відпочинок 1.5 хв'),
+    ]},
+    { id: uid(), name: 'День В', note: 'Ноги (квадрицепс)', exercises: [
+      mk('Болгарські випади з гантелями (або в Сміті)', '3 × 10–12', 3, 'на кожну ногу · RIR 2 · відпочинок 2 хв'),
+      mk('Розгинання ніг сидячи', '3 × 12–15', 3, 'RIR 1 · відпочинок 1.5 хв'),
+      mk('Згинання ніг сидячи', '3 × 10–12', 3, 'RIR 1 · відпочинок 1.5 хв'),
+      mk('Тяга верхнього блока зворотним вузьким хватом', '4 × 8–12', 4, 'RIR 1–2 · відпочинок 2 хв'),
+      mk('Жим на похилій лаві в тренажері', '3 × 8–12', 3, 'RIR 1–2 · відпочинок 2 хв'),
+      mk('Згинання рук на біцепс', '3 × 10–12', 3, 'RIR 1 · відпочинок 1.5 хв'),
+      mk('Підйоми ніг/колін у висі (прес)', '3 × 10–15', 3, 'RIR 1–2 · відпочинок 1.5 хв'),
+    ]},
+  ]};
+}
+function freshState(){ const p = defaultProgram(); return { v: 1, program: p, nextDayId: p.days[0].id, logs: [], draft: null }; }
+const valid = d => d && d.program && Array.isArray(d.program.days) && d.program.days.length > 0 && Array.isArray(d.logs);
+
+function load(){
+  try { const raw = localStorage.getItem(KEY); if (raw){ const d = JSON.parse(raw); if (valid(d)) return d; } } catch(e){}
+  return freshState();
+}
+function save(){
+  try { localStorage.setItem(KEY, JSON.stringify(S)); }
+  catch(e){ toast('⚠️ Не вдалося зберегти дані'); }
+}
+
+let S = load();
+let tab = 'workout';
+let selDayId = S.draft ? S.draft.dayId : S.nextDayId;
+
+const days = () => S.program.days;
+const getDay = id => days().find(d => d.id === id) || days()[0];
+const nextAfter = id => { const ds = days(); const i = ds.findIndex(d => d.id === id); return ds[(i + 1) % ds.length]; };
+const logsDesc = () => [...S.logs].sort((a, b) => b.date.localeCompare(a.date) || (b.ts || 0) - (a.ts || 0));
+
+/* Останній результат вправи: за id, або за назвою (якщо та сама вправа є в різних днях) */
+function prevFor(ex, desc){
+  const n = norm(ex.name);
+  for (const l of desc){
+    const e = l.ex.find(x => x.exId === ex.id) || l.ex.find(x => norm(x.name) === n);
+    if (e && e.sets.length) return { date: l.date, sets: e.sets };
+  }
+  return null;
+}
+function blankRows(ex, prev){
+  const n = Math.max(ex.sets || 3, prev ? prev.sets.length : 0, 1);
+  return Array.from({ length: n }, () => ({ kg: '', reps: '', done: false }));
+}
+function ensureDraft(day){
+  if (!S.draft || S.draft.dayId !== day.id) S.draft = { dayId: day.id, date: today(), sets: {}, note: '' };
+  return S.draft;
+}
+function ensureRows(day, ex){
+  const d = ensureDraft(day);
+  if (!d.sets[ex.id]) d.sets[ex.id] = blankRows(ex, prevFor(ex, logsDesc()));
+  return d.sets[ex.id];
+}
+const hasData = d => !!d && (Object.values(d.sets || {}).some(rows => rows.some(filled)) || !!(d.note || '').trim());
+function isUp(s, p){
+  if (!p || !filled(s)) return false;
+  const kg = num(s.kg), r = num(s.reps), pk = num(p.kg), pr = num(p.reps);
+  if (kg !== '' && pk !== '' && kg > pk) return true;
+  if ((kg === pk || kg === '') && r !== '' && pr !== '' && r > pr) return true;
+  return false;
+}
+
+/* ================= Рендер: Тренування ================= */
+function restCard(desc){
+  const t = today(), last = desc[0];
+  let msg;
+  if (!last) msg = 'Ще немає жодного тренування. Обери день і починай 💪';
+  else {
+    const n = daysBetween(last.date, t);
+    if (n <= 0) msg = `Сьогодні вже було тренування — <b>${esc(last.dayName)}</b>. Час відпочити.`;
+    else if (n === 1) msg = `Вчора було <b>${esc(last.dayName)}</b>. Сьогодні можна відпочити — або тренуйся, якщо почуваєшся добре.`;
+    else msg = `Відпочинок: <b>${n} ${plural(n,'день','дні','днів')}</b>. Останнє — ${esc(last.dayName)}, ${fmtDate(last.date)}.`;
+  }
+  const base = parseISO(t), cells = [];
+  for (let i = 13; i >= 0; i--){
+    const dt = new Date(base); dt.setDate(base.getDate() - i);
+    const iso = isoDate(dt), ls = S.logs.filter(l => l.date === iso);
+    cells.push(`<div class="${i === 0 ? 'today' : ''}"><div class="d">${WD[dt.getDay()]}</div>
+      <div class="c ${ls.length ? 'on' : ''}">${ls.length ? esc(shortName(ls[ls.length-1].dayName)) : dt.getDate()}</div></div>`);
+  }
+  const week = S.logs.filter(l => { const n = daysBetween(l.date, t); return n >= 0 && n < 7; }).length;
+  return `<div class="card"><div class="rest-msg">${msg}</div><div class="strip">${cells.join('')}</div>
+    <div class="rest-foot">За останні 7 днів: ${week} ${plural(week,'тренування','тренування','тренувань')}</div></div>`;
+}
+
+function setRow(s, i, p){
+  const pv = p ? `<span class="pv">${esc(fmtSet(p))}</span>` : `<span class="pv no">—</span>`;
+  const phKg = p && p.kg !== '' && p.kg != null ? esc(showKg(p.kg)) : 'кг';
+  const phR = p && p.reps !== '' && p.reps != null ? esc(p.reps) : 'повт';
+  return `<div class="set ${s.done ? 'done' : ''} ${isUp(s, p) ? 'up' : ''}" data-i="${i}">
+    <span class="n">${i + 1}</span>${pv}
+    <input data-act="kg" inputmode="decimal" autocomplete="off" placeholder="${phKg}" value="${esc(s.kg)}" aria-label="Вага, кг">
+    <input data-act="reps" inputmode="numeric" autocomplete="off" placeholder="${phR}" value="${esc(s.reps)}" aria-label="Повторення">
+    <button class="ok" data-act="done" aria-label="Підхід виконано">✓</button></div>`;
+}
+
+function exCard(ex, d, desc){
+  const prev = prevFor(ex, desc);
+  const rows = d && d.sets[ex.id] ? d.sets[ex.id] : blankRows(ex, prev);
+  const pv = prev ? prev.sets : [];
+  const prevLine = prev
+    ? `Минулого разу: ${fmtDate(prev.date)} · ${ago(daysBetween(prev.date, today()))}`
+    : 'Ще не виконувалась — це буде перший запис';
+  return `<div class="ex" data-ex="${ex.id}">
+    <div class="ex-head">
+      <textarea class="ex-name" data-act="rename" rows="1" aria-label="Назва вправи">${esc(ex.name)}</textarea>
+    </div>
+    ${ex.target || ex.info ? `<div class="info">${ex.target ? `<span class="tgt">${esc(ex.target)}</span>` : ''}${esc(ex.info || '')}</div>` : ''}
+    <div class="prev ${prev ? '' : 'none'}">${prevLine}</div>
+    <div class="sets">
+      <div class="sh"><span></span><span>Минулого</span><span>кг</span><span>повт</span><span></span></div>
+      ${rows.map((s, i) => setRow(s, i, pv[i] || null)).join('')}
+    </div>
+    <div class="ex-foot">
+      <button data-act="addset">+ підхід</button>
+      <button data-act="delset" ${rows.length <= 1 ? 'disabled' : ''}>− підхід</button>
+    </div></div>`;
+}
+
+function renderWorkout(){
+  const day = getDay(selDayId); selDayId = day.id;
+  const d = (S.draft && S.draft.dayId === day.id) ? S.draft : null;
+  const desc = logsDesc();
+  const chips = days().map(x => {
+    const inProg = S.draft && S.draft.dayId === x.id && hasData(S.draft);
+    const sub = inProg ? 'в процесі' : (x.id === S.nextDayId ? 'наступний' : '');
+    return `<button class="chip ${x.id === day.id ? 'sel' : ''}" data-act="pick" data-id="${x.id}">
+      <div class="t">${esc(x.name)}</div><div class="s ${sub ? 'nx' : ''}">${sub}</div></button>`;
+  }).join('');
+  let h = restCard(desc);
+  h += `<div class="chips">${chips}</div>`;
+  if (day.note) h += `<div class="daynote">${esc(day.note)}</div>`;
+  h += `<div class="wo-head"><label class="datel">Дата
+      <input type="date" data-act="date" value="${d ? d.date : today()}" max="${today()}"></label>
+      ${d && hasData(d) ? '<span class="badge">в процесі</span>' : ''}</div>`;
+  if (!day.exercises.length) h += `<div class="empty">У цьому дні ще немає вправ.</div>`;
+  h += day.exercises.map(ex => exCard(ex, d, desc)).join('');
+  h += `<button class="addex" data-act="addex">+ Додати вправу</button>`;
+  h += `<textarea class="note" data-act="note" placeholder="Нотатка до тренування (самопочуття, що змінити)…">${esc(d ? d.note : '')}</textarea>`;
+  h += `<div class="cta"><button class="finish" data-act="finish">✓ Завершити «${esc(day.name)}»</button></div>`;
+  if (d && hasData(d)) h += `<button class="ghost" data-act="discard">Скасувати це тренування</button>`;
+  view.innerHTML = h;
+  view.querySelectorAll('.ex-name').forEach(fitName);
+}
+// Назва вправи переноситься на кілька рядків, якщо довга
+function fitName(el){ el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+
+function refreshRow(rowEl, day, ex, i){
+  const rows = S.draft.sets[ex.id];
+  const prev = prevFor(ex, logsDesc());
+  rowEl.classList.toggle('up', isUp(rows[i], prev ? prev.sets[i] : null));
+}
+
+function workoutInput(t, act){
+  const day = getDay(selDayId);
+  const exEl = t.closest('.ex');
+  const ex = exEl ? day.exercises.find(x => x.id === exEl.dataset.ex) : null;
+  if (act === 'rename' && ex){ ex.name = t.value.replace(/\n/g, ' '); fitName(t); save(); return; }
+  if (act === 'note'){ ensureDraft(day).note = t.value; save(); return; }
+  if (act === 'date'){ if (t.value){ ensureDraft(day).date = t.value; save(); } return; }
+  if ((act === 'kg' || act === 'reps') && ex){
+    const rowEl = t.closest('.set'), i = +rowEl.dataset.i;
+    const rows = ensureRows(day, ex);
+    rows[i][act] = t.value.replace(/[^\d.,]/g, '');
+    if (t.value !== rows[i][act]) t.value = rows[i][act];
+    save(); refreshRow(rowEl, day, ex, i);
+    if (hasData(S.draft) && !view.querySelector('.badge'))
+      view.querySelector('.wo-head').insertAdjacentHTML('beforeend', '<span class="badge">в процесі</span>');
+  }
+}
+
+function workoutClick(t, act){
+  const day = getDay(selDayId);
+  const exEl = t.closest('.ex');
+  const ex = exEl ? day.exercises.find(x => x.id === exEl.dataset.ex) : null;
+  const y = scrollY;
+  const rerender = () => { renderWorkout(); scrollTo(0, y); };
+
+  if (act === 'pick'){
+    const id = t.dataset.id;
+    if (id === selDayId) return;
+    if (S.draft && S.draft.dayId !== id){
+      if (hasData(S.draft)){
+        if (!confirm(`Незавершене тренування «${getDay(S.draft.dayId).name}» буде скасовано. Продовжити?`)) return;
+      }
+      S.draft = null; save();
+    }
+    selDayId = id; renderWorkout(); return;
+  }
+  if (act === 'done' && ex){
+    const i = +t.closest('.set').dataset.i;
+    const rows = ensureRows(day, ex), s = rows[i];
+    const prev = prevFor(ex, logsDesc()), p = prev ? prev.sets[i] : null;
+    if (!s.done && p){   // порожнє поле = «так само, як минулого разу»
+      if (String(s.kg).trim() === '' && p.kg !== '' && p.kg != null) s.kg = showKg(p.kg);
+      if (String(s.reps).trim() === '' && p.reps !== '' && p.reps != null) s.reps = String(p.reps);
+    }
+    s.done = !s.done;
+    if (s.done && navigator.vibrate) navigator.vibrate(12);
+    save(); rerender(); return;
+  }
+  if (act === 'addset' && ex){ ensureRows(day, ex).push({ kg: '', reps: '', done: false }); save(); rerender(); return; }
+  if (act === 'delset' && ex){ const rows = ensureRows(day, ex); if (rows.length > 1) rows.pop(); save(); rerender(); return; }
+  if (act === 'addex'){
+    const name = prompt('Назва нової вправи:');
+    if (!name || !name.trim()) return;
+    day.exercises.push(mk(name.trim(), '', 3)); save(); rerender();
+    toast('Вправу додано в програму цього дня'); return;
+  }
+  if (act === 'discard'){
+    if (!confirm('Скасувати поточне тренування? Введені дані буде видалено.')) return;
+    S.draft = null; save(); rerender(); return;
+  }
+  if (act === 'finish') finishWorkout(day);
+}
+
+function finishWorkout(day){
+  const d = (S.draft && S.draft.dayId === day.id) ? S.draft : null;
+  if (!d || !Object.values(d.sets).some(rows => rows.some(filled))){
+    toast('Заповни хоча б один підхід'); return;
+  }
+  const next = nextAfter(day.id);
+  const msg = days().length > 1
+    ? `Завершити «${day.name}»?\n\nНаступним тренуванням буде «${next.name}».`
+    : `Завершити «${day.name}»?`;
+  if (!confirm(msg)) return;
+  const log = {
+    id: uid(), ts: Date.now(), date: d.date || today(), dayId: day.id, dayName: day.name, note: (d.note || '').trim(),
+    ex: day.exercises.map(e => ({
+      exId: e.id, name: e.name,
+      sets: (d.sets[e.id] || []).filter(filled).map(s => ({ kg: num(s.kg), reps: num(s.reps) })),
+    })).filter(x => x.sets.length),
+  };
+  S.logs.push(log);
+  S.nextDayId = next.id;
+  S.draft = null;
+  save();
+  selDayId = next.id;
+  renderWorkout(); scrollTo(0, 0);
+  toast(`Збережено 💪 Наступне — ${next.name}`);
+}
+
+/* ================= Рендер: Історія ================= */
+function renderHistory(){
+  const desc = logsDesc();
+  let h = `<h1>Історія <span class="cnt">${desc.length || ''}</span></h1>`;
+  if (!desc.length){ view.innerHTML = h + `<div class="empty">Тут з’являться завершені тренування.</div>`; return; }
+  h += desc.map(l => `<div class="card">
+    <div class="log-h"><span class="tag">${esc(l.dayName)}</span><span class="ld">${fmtDate(l.date)} · ${ago(daysBetween(l.date, today()))}</span></div>
+    ${l.ex.map(x => `<div class="lr"><span class="ln">${esc(x.name)}</span><span class="lv">${x.sets.map(s => esc(fmtSet(s))).join('<br>')}</span></div>`).join('')}
+    ${l.note ? `<div class="lnote">${esc(l.note)}</div>` : ''}
+    <div class="log-f"><button class="link danger" data-act="dellog" data-id="${l.id}">Видалити</button></div>
+  </div>`).join('');
+  view.innerHTML = h;
+}
+function historyClick(t, act){
+  if (act !== 'dellog') return;
+  const l = S.logs.find(x => x.id === t.dataset.id); if (!l) return;
+  const newest = logsDesc()[0] === l;
+  if (!confirm(`Видалити тренування «${l.dayName}» від ${fmtDate(l.date)}?` + (newest ? `\n\nНаступним знову стане «${l.dayName}».` : ''))) return;
+  S.logs = S.logs.filter(x => x !== l);
+  if (newest && days().some(d => d.id === l.dayId)){ S.nextDayId = l.dayId; if (!S.draft) selDayId = l.dayId; }
+  save(); const y = scrollY; renderHistory(); scrollTo(0, y);
+}
+
+/* ================= Рендер: Програма ================= */
+function renderProgram(){
+  const ds = days();
+  let h = `<h1>Програма</h1><div class="hint">Перейменовуй дні й вправи, змінюй підходи та порядок. Минулі результати не губляться.</div>`;
+  ds.forEach((d, di) => {
+    h += `<div class="card" data-day="${d.id}">
+      <div class="pd-head"><input class="pd-name" data-act="dname" value="${esc(d.name)}" aria-label="Назва дня">
+        <div class="ib"><button data-act="dup" ${di === 0 ? 'disabled' : ''} aria-label="Вище">↑</button><button data-act="ddown" ${di === ds.length - 1 ? 'disabled' : ''} aria-label="Нижче">↓</button><button data-act="ddel" class="danger" ${ds.length <= 1 ? 'disabled' : ''} aria-label="Видалити день">✕</button></div></div>
+      <input class="pd-note" data-act="dnote" value="${esc(d.note || '')}" placeholder="Опис дня (необов'язково)">
+      ${d.exercises.map((x, xi) => `<div class="pex" data-ex="${x.id}">
+        <input class="pex-name" data-act="xname" value="${esc(x.name)}" placeholder="Назва вправи">
+        <div class="pex-sub">
+          <input class="pex-tgt" data-act="xtgt" value="${esc(x.target)}" placeholder="3 × 8–10">
+          <label class="pex-sets">підх.<input data-act="xsets" inputmode="numeric" value="${x.sets}"></label>
+          <div class="ib"><button data-act="xup" ${xi === 0 ? 'disabled' : ''} aria-label="Вище">↑</button><button data-act="xdown" ${xi === d.exercises.length - 1 ? 'disabled' : ''} aria-label="Нижче">↓</button><button data-act="xdel" class="danger" aria-label="Видалити">✕</button></div>
+        </div>
+        <input class="pex-info" data-act="xinfo" value="${esc(x.info || '')}" placeholder="RIR, відпочинок, підказка…"></div>`).join('')}
+      <button class="addex" data-act="xadd" style="margin:8px 0 0">+ вправа</button>
+    </div>`;
+  });
+  h += `<button class="addex" data-act="dadd">+ Додати день</button>`;
+  h += `<h2>Дані</h2><div class="card">
+      <div class="small muted">Усе зберігається тільки на цьому телефоні. Раз на кілька тижнів зберігай резервну копію (наприклад, собі в Telegram «Збережене»).</div>
+      <div class="btnrow"><button class="btn" data-act="export">⬇ Резервна копія</button><button class="btn" data-act="import">⬆ Відновити</button></div>
+      <button class="btn full danger" data-act="reset">Скинути все</button></div>`;
+  view.innerHTML = h;
+}
+function programInput(t, act){
+  const dEl = t.closest('[data-day]'); if (!dEl) return;
+  const d = days().find(x => x.id === dEl.dataset.day); if (!d) return;
+  if (act === 'dname'){ d.name = t.value; save(); return; }
+  if (act === 'dnote'){ d.note = t.value; save(); return; }
+  const xEl = t.closest('.pex'); const x = xEl ? d.exercises.find(e => e.id === xEl.dataset.ex) : null; if (!x) return;
+  if (act === 'xname') x.name = t.value;
+  if (act === 'xtgt') x.target = t.value;
+  if (act === 'xinfo') x.info = t.value;
+  if (act === 'xsets'){ const n = parseInt(t.value, 10); if (n >= 1 && n <= 12) x.sets = n; }
+  save();
+}
+function programChange(t, act){
+  // порожні назви не залишаємо
+  if (act === 'dname' && !t.value.trim()){ t.value = 'День'; programInput(t, act); }
+  if (act === 'xname' && !t.value.trim()){ t.value = 'Вправа'; programInput(t, act); }
+  if (act === 'xsets'){ const xEl = t.closest('.pex'); const d = days().find(x => x.id === t.closest('[data-day]').dataset.day);
+    const x = d.exercises.find(e => e.id === xEl.dataset.ex); t.value = x.sets; }
+}
+const swap = (arr, i, j) => { [arr[i], arr[j]] = [arr[j], arr[i]]; };
+function programClick(t, act){
+  const ds = days(), y = scrollY;
+  const rerender = () => { renderProgram(); scrollTo(0, y); };
+  if (act === 'export') return doExport();
+  if (act === 'import') return document.getElementById('file').click();
+  if (act === 'reset'){
+    if (!confirm('Видалити ВСЮ історію і повернути стандартну програму? Це незворотньо.')) return;
+    S = freshState(); selDayId = S.nextDayId; save(); rerender(); toast('Все скинуто'); return;
+  }
+  if (act === 'dadd'){
+    const letters = 'АБВГДЕЖЗИК';
+    ds.push({ id: uid(), name: 'День ' + (letters[ds.length] || ds.length + 1), exercises: [] });
+    save(); rerender(); return;
+  }
+  const dEl = t.closest('[data-day]'); if (!dEl) return;
+  const di = ds.findIndex(x => x.id === dEl.dataset.day), d = ds[di]; if (!d) return;
+  if (act === 'dup' && di > 0){ swap(ds, di, di - 1); save(); rerender(); return; }
+  if (act === 'ddown' && di < ds.length - 1){ swap(ds, di, di + 1); save(); rerender(); return; }
+  if (act === 'ddel'){
+    if (ds.length <= 1) return;
+    if (!confirm(`Видалити «${d.name}» з програми? Історія тренувань залишиться.`)) return;
+    ds.splice(di, 1);
+    if (S.nextDayId === d.id) S.nextDayId = ds[di % ds.length].id;
+    if (S.draft && S.draft.dayId === d.id) S.draft = null;
+    if (selDayId === d.id) selDayId = S.draft ? S.draft.dayId : S.nextDayId;
+    save(); rerender(); return;
+  }
+  if (act === 'xadd'){ d.exercises.push(mk('', '', 3)); save(); rerender();
+    const inputs = view.querySelectorAll(`[data-day="${d.id}"] .pex-name`); const last = inputs[inputs.length - 1]; if (last) last.focus(); return; }
+  const xEl = t.closest('.pex'); if (!xEl) return;
+  const xi = d.exercises.findIndex(e => e.id === xEl.dataset.ex), x = d.exercises[xi]; if (!x) return;
+  if (act === 'xup' && xi > 0){ swap(d.exercises, xi, xi - 1); save(); rerender(); return; }
+  if (act === 'xdown' && xi < d.exercises.length - 1){ swap(d.exercises, xi, xi + 1); save(); rerender(); return; }
+  if (act === 'xdel'){
+    if (x.name.trim() && !confirm(`Видалити «${x.name}» з «${d.name}»? Історія залишиться.`)) return;
+    d.exercises.splice(xi, 1);
+    if (S.draft && S.draft.sets) delete S.draft.sets[x.id];
+    save(); rerender();
+  }
+}
+
+/* ================= Резервна копія ================= */
+async function doExport(){
+  const name = `trenuvannya-${today()}.json`;
+  const file = new File([JSON.stringify(S, null, 1)], name, { type: 'application/json' });
+  try {
+    if (navigator.canShare && navigator.canShare({ files: [file] })){
+      await navigator.share({ files: [file], title: 'Резервна копія тренувань' }); return;
+    }
+  } catch(e){ if (e && e.name === 'AbortError') return; }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(file); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+  toast('Файл резервної копії збережено');
+}
+document.getElementById('file').addEventListener('change', async ev => {
+  const f = ev.target.files[0]; ev.target.value = ''; if (!f) return;
+  try {
+    const d = JSON.parse(await f.text());
+    if (!valid(d)) throw new Error('format');
+    if (!confirm(`Відновити з копії? Тренувань у файлі: ${d.logs.length}. Поточні дані буде замінено.`)) return;
+    S = d; if (!days().some(x => x.id === S.nextDayId)) S.nextDayId = days()[0].id;
+    selDayId = S.draft ? S.draft.dayId : S.nextDayId;
+    save(); render(); toast('Дані відновлено');
+  } catch(e){ alert('Не вдалося прочитати файл. Це точно резервна копія з цього застосунку?'); }
+});
+
+/* ================= Події ================= */
+view.addEventListener('input', e => {
+  const t = e.target, act = t.dataset.act; if (!act) return;
+  if (tab === 'workout') workoutInput(t, act);
+  else if (tab === 'program') programInput(t, act);
+});
+view.addEventListener('change', e => {
+  const t = e.target, act = t.dataset.act; if (!act) return;
+  if (tab === 'workout' && act === 'rename' && !t.value.trim()){ t.value = 'Вправа'; workoutInput(t, act); }
+  if (tab === 'program') programChange(t, act);
+});
+view.addEventListener('click', e => {
+  const t = e.target.closest('button[data-act]'); if (!t || t.disabled) return;
+  const act = t.dataset.act;
+  if (tab === 'workout') workoutClick(t, act);
+  else if (tab === 'history') historyClick(t, act);
+  else if (tab === 'program') programClick(t, act);
+});
+// Enter у полі ваги → перейти до повторень, з повторень → наступний підхід
+view.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.matches('.ex-name')){ e.preventDefault(); e.target.blur(); return; }
+  if (e.key !== 'Enter' || !e.target.matches('.set input')) return;
+  e.preventDefault();
+  const all = [...view.querySelectorAll('.set input')]; const i = all.indexOf(e.target);
+  if (all[i + 1]) all[i + 1].focus(); else e.target.blur();
+});
+document.getElementById('tabs').addEventListener('click', e => {
+  const b = e.target.closest('button[data-tab]'); if (!b) return;
+  if (tab === b.dataset.tab){ scrollTo({ top: 0, behavior: 'smooth' }); return; }
+  tab = b.dataset.tab; render(); scrollTo(0, 0);
+});
+
+function render(){
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+  if (tab === 'workout') renderWorkout();
+  else if (tab === 'history') renderHistory();
+  else renderProgram();
+}
+
+let toastTm;
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTm); toastTm = setTimeout(() => el.classList.remove('show'), 2300);
+}
+
+// Якщо застосунок відкрили наступного дня — оновити «сьогодні» в календарі
+document.addEventListener('visibilitychange', () => { if (!document.hidden && tab !== 'program') render(); });
+
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+
+render();
+})();
+</script>
+</body>
+</html>

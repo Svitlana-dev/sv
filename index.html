@@ -49,8 +49,9 @@
   .rest-foot{margin-top:9px;font-size:12px;color:var(--muted)}
 
   /* Вибір дня */
-  .chips{display:flex;gap:8px;overflow-x:auto;margin:0 0 12px;padding:2px 0}
-  .chip{flex:1 0 auto;min-width:86px;padding:10px 10px 8px;border-radius:12px;border:1px solid var(--line);
+  .chips{display:flex;gap:8px;overflow-x:auto;margin:0 0 12px;padding:2px 0;position:relative;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:1 0 auto;min-width:80px;padding:10px 10px 8px;border-radius:12px;border:1px solid var(--line);
     background:var(--surface);text-align:center}
   .chip .t{font-weight:700;font-size:15px;white-space:nowrap}
   .chip .s{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;min-height:14px}
@@ -196,46 +197,82 @@ function fmtSet(s){
 }
 function shortName(name){
   const s = String(name).replace(/^день\s*/i, '').trim() || String(name);
-  return s.slice(0, 2).toUpperCase();
+  const w = s.split(/\s+/);
+  // «Жим А» → «ЖА», «Ноги Б» → «НБ», «Кор» → «КО»
+  return (w.length > 1 ? w[0][0] + w[1][0] : s.slice(0, 2)).toUpperCase();
 }
 
 /* ================= Дані ================= */
 const mk = (name, target, sets, info = '') => ({ id: uid(), name, target, sets, info });
 function defaultProgram(){
   return { days: [
-    { id: uid(), name: 'День А', note: 'Сідниці', exercises: [
-      mk('Ягодичний міст у тренажері', '4 × 8–12', 4, 'RIR 1–2 · відпочинок 2.5 хв'),
-      mk('Жим ногами', '3 × 10–12', 3, 'Стопи високо й широко, акцент на сідниці · RIR 1–2 · відпочинок 2.5 хв'),
-      mk('Тяга верхнього блока широким хватом', '4 × 8–12', 4, 'RIR 1–2 · відпочинок 2 хв'),
-      mk('Жим гантелей лежачи', '3 × 8–12', 3, 'RIR 1–2 · відпочинок 2 хв'),
-      mk('Згинання ніг лежачи', '3 × 10–12', 3, 'RIR 1 · відпочинок 1.5 хв'),
-      mk('Скручування на блоці (прес)', '3 × 12–15', 3, 'RIR 1–2 · відпочинок 1.5 хв'),
+    // Де вправа та сама, що й у старій програмі, назва залишена старою,
+    // щоб минулі ваги підтягувались. Уточнення техніки винесено в підказку.
+    { id: uid(), name: 'Ноги А', note: 'Сідниці (силове)', exercises: [
+      mk('Ягодичний міст у тренажері', '4 × 8–12', 4, 'Великий сідничний · також біцепс стегна · відпочинок 2.5 хв'),
+      mk('Жим ногами', '3 × 10–12', 3, 'Стопи високо й широко · сідниці + біцепс стегна · також квадрицепс · відпочинок 2.5 хв'),
+      mk('Згинання ніг лежачи', '3 × 10–12', 3, 'Біцепс стегна · відпочинок 1.5 хв'),
+      mk('Абдукція (корпус нахилити вперед)', '3 × 15–20', 3, 'Середній сідничний (верх і боки сідниць) · відпочинок 1.5 хв'),
     ]},
-    { id: uid(), name: 'День Б', note: 'Спина та плечі', exercises: [
-      mk('Тяга з упором грудьми (Т-гриф/Хаммер)', '4 × 8–12', 4, 'RIR 1–2 · відпочинок 2 хв'),
-      mk('Жим на плечі в тренажері', '3 × 8–12', 3, 'RIR 1–2 · відпочинок 2 хв'),
-      mk('Махи в сторони (блок/тренажер)', '3 × 12–15', 3, 'RIR 1 · відпочинок 1.5 хв'),
-      mk('Гак-присід у тренажері', '3 × 10–12', 3, 'RIR 1–2 · відпочинок 2.5 хв'),
-      mk('Відведення ніг у тренажері (абдукція)', '3 × 12–15', 3, 'RIR 1 · відпочинок 1.5 хв'),
-      mk('Розгинання рук на трицепс (блок)', '3 × 10–12', 3, 'RIR 1 · відпочинок 1.5 хв'),
-      mk('Гіперекстензія', '3 × 12–15', 3, 'Спина трохи округлена, акцент на сідниці · RIR 2 · відпочинок 1.5 хв'),
+    { id: uid(), name: 'Верх А', note: 'Спина', exercises: [
+      mk('Тяга верхнього блока широким хватом', '4 × 8–12', 4, 'Найширші (V-силует, тонша талія) · також біцепс, задня дельта · відпочинок 2 хв'),
+      mk('Тяга з упором грудьми (Т-гриф/Хаммер)', '3 × 10–12', 3, 'Широкий хват · середина спини (постава) · також задня дельта, біцепс · відпочинок 2 хв'),
+      mk('Зворотна розводка в тренажері', '3 × 12–15', 3, 'Задня дельта · також ромбоподібні · відпочинок 1.5 хв'),
+      mk('Згинання рук на біцепс', '3 × 10–12', 3, 'На блоці · біцепс · відпочинок 1.5 хв'),
     ]},
-    { id: uid(), name: 'День В', note: 'Ноги (квадрицепс)', exercises: [
-      mk('Болгарські випади з гантелями (або в Сміті)', '3 × 10–12', 3, 'на кожну ногу · RIR 2 · відпочинок 2 хв'),
-      mk('Розгинання ніг сидячи', '3 × 12–15', 3, 'RIR 1 · відпочинок 1.5 хв'),
-      mk('Згинання ніг сидячи', '3 × 10–12', 3, 'RIR 1 · відпочинок 1.5 хв'),
-      mk('Тяга верхнього блока зворотним вузьким хватом', '4 × 8–12', 4, 'RIR 1–2 · відпочинок 2 хв'),
-      mk('Жим на похилій лаві в тренажері', '3 × 8–12', 3, 'RIR 1–2 · відпочинок 2 хв'),
-      mk('Згинання рук на біцепс', '3 × 10–12', 3, 'RIR 1 · відпочинок 1.5 хв'),
-      mk('Підйоми ніг/колін у висі (прес)', '3 × 10–15', 3, 'RIR 1–2 · відпочинок 1.5 хв'),
+    { id: uid(), name: 'Ноги Б', note: 'Квадрицепс і сідниці', exercises: [
+      mk('Гак-присід у тренажері', '4 × 8–12', 4, 'Стопи по центру платформи · квадрицепс · також сідниці · відпочинок 2.5 хв'),
+      mk('Болгарські випади з гантелями (або в Сміті)', '3 × 10–12', 3, 'На кожну ногу · довгий крок, легкий нахил уперед · сідниці + квадрицепс · відпочинок 2 хв'),
+      mk('Розгинання ніг сидячи', '3 × 12–15', 3, 'Квадрицепс · відпочинок 1.5 хв'),
+      mk('Підйоми на носки стоячи', '3 × 12–15', 3, 'Литки · відпочинок 1 хв'),
+    ]},
+    { id: uid(), name: 'Верх Б', note: 'Плечі, груди, трицепс. Жим на похилій лаві можна чергувати по циклах із жимом гантелей лежачи, тоді верх і середина грудей отримуватимуть навантаження по черзі.', exercises: [
+      mk('Жим на плечі в тренажері', '3 × 8–12', 3, 'Передня та середня дельта · також трицепс · відпочинок 2 хв'),
+      mk('Жим на похилій лаві в тренажері', '3 × 8–12', 3, 'Верх грудей · також передня дельта, трицепс · відпочинок 2 хв'),
+      mk('Махи гантелями в сторони', '3 × 12–15', 3, 'Середня дельта («округлі» плечі) · відпочинок 1.5 хв'),
+      mk('Розгинання рук із-за голови з канатом', '3 × 12–15', 3, 'Трицепс, довга головка (зона під пахвою) · відпочинок 1.5 хв'),
+    ]},
+    { id: uid(), name: 'Ноги В', note: 'Сідниці (ізоляція) і поперек', exercises: [
+      mk('Гіперекстензія', '3 × 12–15', 3, '1-й підхід з рівною спиною, 2-й і 3-й з округленою · сідниці + поперек · також біцепс стегна · відпочинок 2 хв'),
+      mk('Відведення ноги назад у кросовері', '3 × 12–15', 3, 'На кожну ногу · великий сідничний · відпочинок 1.5 хв'),
+      mk('Згинання ніг сидячи', '3 × 10–12', 3, 'Біцепс стегна · відпочинок 1.5 хв'),
+      mk('Абдукція (сидячи рівно)', '3 × 15–20', 3, 'Середній сідничний · відпочинок 1.5 хв'),
+    ]},
+    { id: uid(), name: 'Кор', note: 'Кор і дрібні м’язи — легкий день, приблизно 30 хв', exercises: [
+      mk('Скручування на блоці (прес)', '3 × 12–15', 3, 'Прес, верхня частина · відпочинок 1.5 хв'),
+      mk('Підйоми колін у висі або в упорі на ліктях', '3 × 10–15', 3, 'Прес, нижня частина · відпочинок 1.5 хв'),
+      mk('Мах однією рукою в кросовері', '3 × 12–15', 3, 'Середня дельта · відпочинок 1.5 хв'),
+      mk('Розгинання рук на трицепс (блок)', '3 × 12–15', 3, 'Пряма рукоять · трицепс · відпочинок 1.5 хв'),
     ]},
   ]};
 }
-function freshState(){ const p = defaultProgram(); return { v: 1, program: p, nextDayId: p.days[0].id, logs: [], draft: null }; }
+// Номер версії програми. Коли програма змінюється, збільшуємо його:
+// на телефоні програма оновиться сама, а історія тренувань залишиться.
+const PROGRAM_VERSION = 2;
+function freshState(){ const p = defaultProgram(); return { v: 1, programVersion: PROGRAM_VERSION, program: p, nextDayId: p.days[0].id, logs: [], draft: null }; }
 const valid = d => d && d.program && Array.isArray(d.program.days) && d.program.days.length > 0 && Array.isArray(d.logs);
 
+let programUpdated = false;
 function load(){
-  try { const raw = localStorage.getItem(KEY); if (raw){ const d = JSON.parse(raw); if (valid(d)) return d; } } catch(e){}
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw){
+      const d = JSON.parse(raw);
+      if (valid(d)){
+        if ((d.programVersion || 1) < PROGRAM_VERSION){
+          // Нова програма замість старої. Історія не чіпається, а минулі
+          // результати підтягуються за назвою вправи.
+          d.program = defaultProgram();
+          d.nextDayId = d.program.days[0].id;
+          d.draft = null;
+          d.programVersion = PROGRAM_VERSION;
+          programUpdated = true;
+          try { localStorage.setItem(KEY, JSON.stringify(d)); } catch(e){}
+        }
+        return d;
+      }
+    }
+  } catch(e){}
   return freshState();
 }
 function save(){
@@ -291,7 +328,7 @@ function restCard(desc){
   else {
     const n = daysBetween(last.date, t);
     if (n <= 0) msg = `Сьогодні вже було тренування — <b>${esc(last.dayName)}</b>. Час відпочити.`;
-    else if (n === 1) msg = `Вчора було <b>${esc(last.dayName)}</b>. Сьогодні можна відпочити — або тренуйся, якщо почуваєшся добре.`;
+    else if (n === 1) msg = `Вчора було <b>${esc(last.dayName)}</b>.`;
     else msg = `Відпочинок: <b>${n} ${plural(n,'день','дні','днів')}</b>. Останнє — ${esc(last.dayName)}, ${fmtDate(last.date)}.`;
   }
   const base = parseISO(t), cells = [];
@@ -364,6 +401,9 @@ function renderWorkout(){
   if (d && hasData(d)) h += `<button class="ghost" data-act="discard">Скасувати це тренування</button>`;
   view.innerHTML = h;
   view.querySelectorAll('.ex-name').forEach(fitName);
+  // Днів багато — прокрутити рядок кнопок так, щоб вибраний день було видно
+  const ch = view.querySelector('.chips'), sel = ch && ch.querySelector('.chip.sel');
+  if (sel) ch.scrollLeft = sel.offsetLeft - (ch.clientWidth - sel.offsetWidth) / 2;
 }
 // Назва вправи переноситься на кілька рядків, якщо довга
 function fitName(el){ el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
@@ -654,6 +694,7 @@ if (navigator.storage && navigator.storage.persist) navigator.storage.persist().
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
 
 render();
+if (programUpdated) toast('Програму оновлено. Історія збережена');
 })();
 </script>
 </body>
